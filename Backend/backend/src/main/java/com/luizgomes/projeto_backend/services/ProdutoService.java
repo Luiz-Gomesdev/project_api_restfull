@@ -60,8 +60,23 @@ public class ProdutoService {
      * @return Retorna o produto que foi adicionado na lista.
      */
     public ProdutoDTO adicionar(ProdutoDTO produtoDto){
-        produto.setId(null);
-        return produtoRepository.save(produto);
+        // Removendo o id para conseguir fazer o cadastro.
+        produtoDto.setId(null);
+
+        // Criar um objeto de mapeamento.
+        ModelMapper mapper = new ModelMapper();
+
+        // Converter o nosso produtoDTO em um produto.
+        Produto produto = mapper.map(produtoDto, Produto.class);
+
+        // Salvar o Produto do banco.
+        produto = produtoRepository.save(produto);
+
+        // Pego o id que foi gerado no banco e jogo em produtoDto
+        produtoDto.setId(produto.getId());
+
+        // Retornar o ProdutoDTO atualizado.
+        return produtoDto;
     }
 
     /**
@@ -69,6 +84,15 @@ public class ProdutoService {
      * @param id do produto a ser deletado
      */
     public void deletar(Integer id){
+        // Verificar se o produto existe.
+        Optional<Produto> produto = produtoRepository.findById(id);
+
+        // Se não existir lança uma exeption.
+        if(produto.isEmpty()){
+            throw new ResourceNotFoundException("Não foi possível deletar o produto com id: " + id + " - Produto não existe");
+        }
+
+        // Deleta o produto pelo id.
         produtoRepository.deleteById(id);
     }
 
@@ -78,12 +102,23 @@ public class ProdutoService {
      * @param id do produto.
      * @return Retorna o produto após atualizar a lista.
      */
-    public ProdutoDTO atualizar(Integer id, Produto produtoDTO){
+    public ProdutoDTO atualizar(Integer id, ProdutoDTO produtoDto){
 
-        // Ter alguma validação no ID.
-        produto.setId(id);
+        // Passar o id para o produtoDto.
+        produtoDto.setId(id);
 
-        return produtoRepository.save(produto);
+        // Criar um objeto de mapeamento.
+        ModelMapper mapper = new ModelMapper();
+
+        // Converte o ProdutoDTO em um Produto.
+        Produto produto = mapper.map(produtoDto, Produto.class);
+
+        // Atualizar o produto no Banco de dados.
+        produtoRepository.save(produto);
+
+        // Retornar o produtoDto atualizado.
+        return produtoDto;
+
     }
 
 }
