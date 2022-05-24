@@ -7,8 +7,10 @@ import java.util.stream.Collectors;
 import com.luizgomes.projeto_backend.model.Produto;
 import com.luizgomes.projeto_backend.services.ProdutoService;
 import com.luizgomes.projeto_backend.shared.ProdutoDTO;
+import com.luizgomes.projeto_backend.view.model.ProdutoRequest;
 import com.luizgomes.projeto_backend.view.model.ProdutoResponse;
 
+import org.apache.catalina.mapper.Mapper;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -54,19 +56,39 @@ public class ProdutoController {
     }
 
     @PostMapping
-    public Produto adicionar(@RequestBody Produto produto){
-        return produtoService.adicionar(produto);
+    public ResponseEntity<ProdutoResponse> adicionar(@RequestBody ProdutoRequest produtoReq){
+        ModelMapper mapper = new ModelMapper();
+
+        // Recebo um ProdutoRequest e converto em um ProdutoDTO
+        ProdutoDTO produtoDto = mapper.map(produtoReq, ProdutoDTO.class);
+        
+        // Depois mando o meu serviço salvar o produtoDto
+        produtoDto = produtoService.adicionar(produtoDto);
+
+        // Converto por fim o produtoDto em um ProdutoResponse com o Status Code
+        return new ResponseEntity<>(mapper.map(produtoDto, ProdutoResponse.class), HttpStatus.CREATED);
     }
 
     @DeleteMapping("/{id}")
-    public String deletar(@PathVariable Integer id){
+    public ResponseEntity<?> deletar(@PathVariable Integer id){
         produtoService.deletar(id);
-        return "Produto com id: " + id + " foi deletado com sucesso!";
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     @PutMapping("/{id}")
-    public Produto atualizar(@RequestBody Produto produto, @PathVariable Integer id){
-        return produtoService.atualizar(id, produto);
+    public ResponseEntity<ProdutoResponse> atualizar(@RequestBody ProdutoRequest produtoReq, @PathVariable Integer id){
+
+        ModelMapper mapper = new ModelMapper();
+        // Atualizar recebe um ProdutoRequest e converto em um ProdutoDTO
+        ProdutoDTO produtoDto = mapper.map(produtoReq, ProdutoDTO.class);
+
+        // Depois mando o meu serviço atualizar já com o id correto
+        produtoDto = produtoService.atualizar(id, produtoDto);
+
+        // Converto por fim o produtoDto em um ProdutoResponse
+        return new ResponseEntity<>(
+            mapper.map(produtoDto, ProdutoResponse.class),
+            HttpStatus.OK);
     }
     
 }
